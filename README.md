@@ -1,5 +1,5 @@
 # MSTTS TXT在线文字转语音阅读器
-
+演示：https://www.bilibili.com/video/BV1WZrPBsEjw/
 ## 使用方法
 
 **导入TXT，鼠标拖动选取文字开始位置，然后点击播放**
