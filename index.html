@@ -1827,7 +1827,7 @@
         function updatePositionIndicator() {
             const currentChapter = getCurrentChapterTitle();
             if (currentChapter) {
-                currentPosText.textContent = `正在朗读: ${currentChapter}`;
+                currentPosText.textContent = ` ${currentChapter}`;
             } else {
                 currentPosText.textContent = `第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
             }
