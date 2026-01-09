@@ -729,6 +729,7 @@
         let currentFile = null;
         let currentEncoding = 'auto';
         let userSelectedPosition = false; // 标记用户是否手动选择了位置
+        let chapters = []; // 存储章节信息
 
         // DOM元素
         const fileInput = document.getElementById('fileInput');
@@ -1140,7 +1141,7 @@
         // 检测章节
         function detectChapters(text) {
             const chapterRegex = /^第[一二三四五六七八九十零〇百千万\d\s]{1,10}[章节卷集部篇回].+$/gm;
-            const chapters = [];
+            chapters = [];
             let match;
 
             while ((match = chapterRegex.exec(text)) !== null) {
@@ -1618,6 +1619,7 @@
             localStorage.setItem('readingProgress', JSON.stringify(saveData));
 
             // 显示保存成功提示
+            const currentChapter = getCurrentChapterTitle();
             const saveMessage = document.createElement('div');
             saveMessage.style.cssText = `
                 position: fixed;
@@ -1632,7 +1634,11 @@
                 font-weight: 600;
                 animation: slideIn 0.3s ease-out;
             `;
-            saveMessage.innerHTML = `<i class="fas fa-check-circle"></i> 存档成功：第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+            if (currentChapter) {
+                saveMessage.innerHTML = `<i class="fas fa-check-circle"></i> 存档成功：${currentChapter}`;
+            } else {
+                saveMessage.innerHTML = `<i class="fas fa-check-circle"></i> 存档成功：第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+            }
             document.body.appendChild(saveMessage);
 
             // 3秒后自动消失
@@ -1679,6 +1685,7 @@
                 }
 
                 // 显示加载成功提示
+                const currentChapter = getCurrentChapterTitle();
                 const loadMessage = document.createElement('div');
                 loadMessage.style.cssText = `
                     position: fixed;
@@ -1693,7 +1700,11 @@
                     font-weight: 600;
                     animation: slideIn 0.3s ease-out;
                 `;
-                loadMessage.innerHTML = `<i class="fas fa-check-circle"></i> 读档成功：第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+                if (currentChapter) {
+                    loadMessage.innerHTML = `<i class="fas fa-check-circle"></i> 读档成功：${currentChapter}`;
+                } else {
+                    loadMessage.innerHTML = `<i class="fas fa-check-circle"></i> 读档成功：第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+                }
                 document.body.appendChild(loadMessage);
 
                 // 3秒后自动消失
@@ -1814,7 +1825,34 @@
 
         // 更新位置指示器
         function updatePositionIndicator() {
-            currentPosText.textContent = `第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+            const currentChapter = getCurrentChapterTitle();
+            if (currentChapter) {
+                currentPosText.textContent = `正在朗读: ${currentChapter}`;
+            } else {
+                currentPosText.textContent = `第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+            }
+        }
+
+        // 获取当前句子所属的章节标题
+        function getCurrentChapterTitle() {
+            if (!sentences[currentSentenceIndex]) return null;
+
+            // 获取当前句子的文本
+            const currentSentenceText = sentences[currentSentenceIndex].trim();
+            // 在原始文件中查找该文本的位置
+            const sentenceIndexInFile = currentFileContent.indexOf(currentSentenceText);
+
+            if (sentenceIndexInFile === -1) return null;
+
+            // 查找包含该位置的章节
+            for (let i = chapters.length - 1; i >= 0; i--) {
+                const chapter = chapters[i];
+                if (sentenceIndexInFile >= chapter.startIndex) {
+                    return chapter.title;
+                }
+            }
+
+            return null;
         }
 
         // 开始自动滚动
