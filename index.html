@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -375,6 +376,27 @@
             border: 1px solid #e2e8f0;
         }
 
+        .text-display p {
+            cursor: pointer;
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .text-display p:hover {
+            background-color: #e6f2ff;
+            border-left: 3px solid #4299e1;
+            padding-left: 12px;
+        }
+
+        .text-display p.selected {
+            background-color: #dbeafe;
+            border-left: 4px solid #2563eb;
+            padding-left: 12px;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+        }
+
         .highlight {
             background-color: #ffeaa7;
             padding: 2px 0;
@@ -416,13 +438,13 @@
             .main-content {
                 flex-direction: column;
             }
-            
+
             .sidebar {
                 width: 100%;
                 border-right: none;
                 border-bottom: 1px solid #eaeef2;
             }
-            
+
             .reader-controls {
                 justify-content: center;
             }
@@ -433,16 +455,16 @@
                 height: auto;
                 min-height: calc(100vh - 40px);
             }
-            
+
             .playback-controls {
                 flex-direction: column;
                 width: 100%;
             }
-            
+
             .control-btn {
                 width: 100%;
             }
-            
+
             .speed-control {
                 width: 100%;
                 justify-content: center;
@@ -502,6 +524,7 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -513,6 +536,7 @@
                 transform: translateX(0);
                 opacity: 1;
             }
+
             to {
                 transform: translateX(100%);
                 opacity: 0;
@@ -520,6 +544,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -540,14 +565,14 @@
                         <p>支持任何纯文本格式文件(.txt, .md, .json等)</p>
                         <input type="file" id="fileInput" accept=".txt,.md,.json,.html,.css,.js,.xml,.csv">
                     </div>
-                    
+
                     <div class="current-file">
                         <h4>当前文件:</h4>
                         <p id="currentFileName">尚未选择文件</p>
                         <p id="fileInfo">文件大小: 0 KB | 字符数: 0</p>
                     </div>
                 </div>
-                
+
                 <div class="file-section">
                     <div class="section-title">
                         <i class="fas fa-file-code"></i>
@@ -581,7 +606,7 @@
                         <div id="encodingStatus" class="encoding-status"></div>
                     </div>
                 </div>
-                
+
                 <div class="file-section">
                     <div class="section-title">
                         <i class="fas fa-info-circle"></i>
@@ -623,13 +648,13 @@
                             <span>读档</span>
                         </button>
                     </div>
-                    
+
                     <div class="settings-row">
                         <div class="voice-selector">
                             <label for="voiceSelect">语音:</label>
                             <select id="voiceSelect"></select>
                         </div>
-                        
+
                         <div class="speed-control">
                             <label for="speedSelect">语速:</label>
                             <select id="speedSelect">
@@ -656,7 +681,7 @@
                         </p>
                     </div>
                 </div>
-                
+
                 <div class="current-pos-indicator" id="posIndicator">
                     正在朗读: <span id="currentPosText">第 0 句 / 共 0 句</span>
                 </div>
@@ -681,9 +706,12 @@
         <div class="footer-info">
             <p>本阅读器支持多种编码格式，解决中文TXT文件乱码问题 | 使用浏览器Web Speech API实现文字转语音功能</p>
             <p>
-                <a href="http://github.com/IIIStudio/MSTTS" target="_blank" style="color: #718096; text-decoration: none;">GitHub</a> | 
-                <a href="https://cnb.cool/IIIStudio/HTML/MSTTS" target="_blank" style="color: #718096; text-decoration: none;">CNB</a> | 
-                <a href="https://iiistudio.github.io/MSTTS/" target="_blank" style="color: #718096; text-decoration: none;">MSTTS</a>
+                <a href="http://github.com/IIIStudio/MSTTS" target="_blank"
+                    style="color: #718096; text-decoration: none;">GitHub</a> |
+                <a href="https://cnb.cool/IIIStudio/HTML/MSTTS" target="_blank"
+                    style="color: #718096; text-decoration: none;">CNB</a> |
+                <a href="https://iiistudio.github.io/MSTTS/" target="_blank"
+                    style="color: #718096; text-decoration: none;">MSTTS</a>
             </p>
         </div>
     </div>
@@ -700,6 +728,7 @@
         let autoScrollInterval = null;
         let currentFile = null;
         let currentEncoding = 'auto';
+        let userSelectedPosition = false; // 标记用户是否手动选择了位置
 
         // DOM元素
         const fileInput = document.getElementById('fileInput');
@@ -734,12 +763,12 @@
         function loadVoices() {
             voices = speechSynthesis.getVoices();
             voiceSelect.innerHTML = '';
-            
+
             // 过滤中文和英文语音
             const chineseVoices = voices.filter(voice => voice.lang.startsWith('zh'));
             const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
             const otherVoices = voices.filter(voice => !voice.lang.startsWith('zh') && !voice.lang.startsWith('en'));
-            
+
             // 添加中文语音选项
             if (chineseVoices.length > 0) {
                 const chineseGroup = document.createElement('optgroup');
@@ -752,7 +781,7 @@
                 });
                 voiceSelect.appendChild(chineseGroup);
             }
-            
+
             // 添加英文语音选项
             if (englishVoices.length > 0) {
                 const englishGroup = document.createElement('optgroup');
@@ -765,7 +794,7 @@
                 });
                 voiceSelect.appendChild(englishGroup);
             }
-            
+
             // 添加其他语音选项
             if (otherVoices.length > 0) {
                 const otherGroup = document.createElement('optgroup');
@@ -778,19 +807,19 @@
                 });
                 voiceSelect.appendChild(otherGroup);
             }
-            
+
             // 尝试恢复之前选择的语音
             const savedVoice = localStorage.getItem('selectedVoice');
             if (savedVoice && voices.some(voice => voice.voiceURI === savedVoice)) {
                 voiceSelect.value = savedVoice;
             } else {
                 // 默认选择 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland) (zh-CN)
-                const xiaoxiaoVoice = voices.find(voice => 
-                    voice.name.includes('Microsoft Xiaoxiao Online') || 
+                const xiaoxiaoVoice = voices.find(voice =>
+                    voice.name.includes('Microsoft Xiaoxiao Online') ||
                     voice.name.includes('Xiaoxiao') ||
                     voice.voiceURI.includes('Microsoft Xiaoxiao Online')
                 );
-                
+
                 if (xiaoxiaoVoice) {
                     voiceSelect.value = xiaoxiaoVoice.voiceURI;
                 } else if (chineseVoices.length > 0) {
@@ -823,10 +852,10 @@
             e.preventDefault();
             fileInputArea.style.borderColor = '#cbd5e0';
             fileInputArea.style.backgroundColor = '#fff';
-            
+
             if (e.dataTransfer.files.length) {
                 const file = e.dataTransfer.files[0];
-                if (file.type === 'text/plain' || file.name.endsWith('.txt') || 
+                if (file.type === 'text/plain' || file.name.endsWith('.txt') ||
                     file.name.endsWith('.md') || file.name.endsWith('.json')) {
                     readFile(file);
                 } else {
@@ -851,18 +880,18 @@
         function readFile(file, encoding = 'auto') {
             currentFile = file;
             currentFileName.textContent = file.name;
-            
+
             const reader = new FileReader();
-            
-            reader.onload = function(e) {
+
+            reader.onload = function (e) {
                 let content = e.target.result;
-                
+
                 // 尝试检测编码
                 if (encoding === 'auto') {
                     const detectedEncoding = detectEncoding(content, file);
                     currentEncoding = detectedEncoding;
                     currentEncodingDisplay.textContent = detectedEncoding;
-                    
+
                     // 如果检测到的编码不是UTF-8，尝试转换
                     if (detectedEncoding !== 'UTF-8' && detectedEncoding !== '自动检测') {
                         content = convertEncoding(content, detectedEncoding);
@@ -871,18 +900,18 @@
                     // 使用指定的编码
                     currentEncoding = encoding;
                     currentEncodingDisplay.textContent = encoding;
-                    
+
                     if (encoding !== 'UTF-8') {
                         content = convertEncoding(content, encoding);
                     }
                 }
-                
+
                 currentFileContent = content;
                 fileInfo.textContent = `文件大小: ${(file.size / 1024).toFixed(2)} KB | 字符数: ${currentFileContent.length} | 编码: ${currentEncoding}`;
-                
+
                 // 处理文本内容
                 processTextContent(currentFileContent);
-                
+
                 // 启用播放按钮和重新加载按钮
                 playBtn.disabled = false;
                 pauseBtn.disabled = true;
@@ -890,23 +919,23 @@
                 reloadBtn.disabled = false;
                 saveBtn.disabled = false;
                 loadBtn.disabled = false;
-                
+
                 // 显示文本内容
                 displayTextContent(currentFileContent);
-                
+
                 // 更新编码状态
                 encodingStatus.textContent = `使用 ${currentEncoding} 编码加载成功`;
                 encodingStatus.style.color = '#48bb78';
-                
+
                 // 设置对应的编码单选按钮
                 setEncodingRadio(currentEncoding);
             };
-            
-            reader.onerror = function() {
+
+            reader.onerror = function () {
                 encodingStatus.textContent = '文件读取失败，请尝试其他编码';
                 encodingStatus.style.color = '#f56565';
             };
-            
+
             // 读取文件为二进制数组，以便后续编码检测
             reader.readAsArrayBuffer(file);
         }
@@ -915,59 +944,59 @@
         function detectEncoding(buffer, file) {
             // 将ArrayBuffer转换为Uint8Array
             const uint8Array = new Uint8Array(buffer);
-            
+
             // 检测UTF-8 BOM (EF BB BF)
-            if (uint8Array.length >= 3 && 
-                uint8Array[0] === 0xEF && 
-                uint8Array[1] === 0xBB && 
+            if (uint8Array.length >= 3 &&
+                uint8Array[0] === 0xEF &&
+                uint8Array[1] === 0xBB &&
                 uint8Array[2] === 0xBF) {
                 return 'UTF-8';
             }
-            
+
             // 检测UTF-16 LE BOM (FF FE)
-            if (uint8Array.length >= 2 && 
-                uint8Array[0] === 0xFF && 
+            if (uint8Array.length >= 2 &&
+                uint8Array[0] === 0xFF &&
                 uint8Array[1] === 0xFE) {
                 return 'UTF-16LE';
             }
-            
+
             // 检测UTF-16 BE BOM (FE FF)
-            if (uint8Array.length >= 2 && 
-                uint8Array[0] === 0xFE && 
+            if (uint8Array.length >= 2 &&
+                uint8Array[0] === 0xFE &&
                 uint8Array[1] === 0xFF) {
                 return 'UTF-16BE';
             }
-            
+
             // 尝试使用TextDecoder检测
             try {
                 // 尝试UTF-8解码
                 const utf8Decoder = new TextDecoder('utf-8');
                 const utf8Text = utf8Decoder.decode(uint8Array);
-                
+
                 // 检查是否有乱码字符（常见的乱码字符）
-                const garbagePattern = /[â€œâ€�â„¢â€"�â€¦Â®Ã©Ã¨Ã Ã´ÃªÃ®Ã»Ã§Ã¯Ã¼Ã¶Ã¤ÃŸ]/;
+                const garbagePattern = /[â€œâ€�â„¢â€"�â€¦Â®Ã©Ã¨Ã Ã´ÃªÃ®Ã»Ã§Ã¯Ã¼Ã¶Ã¤ÃŸ]/;
                 if (!garbagePattern.test(utf8Text)) {
                     return 'UTF-8';
                 }
             } catch (e) {
                 // UTF-8解码失败
             }
-            
+
             // 基于文件名和常见中文编码猜测
             const fileName = file.name.toLowerCase();
-            
+
             // 如果是中文文件，优先尝试GBK
-            if (fileName.includes('chinese') || fileName.includes('cn') || 
+            if (fileName.includes('chinese') || fileName.includes('cn') ||
                 fileName.includes('zh') || fileName.includes('gb')) {
                 return 'GBK';
             }
-            
+
             // 如果是繁体中文文件
-            if (fileName.includes('big5') || fileName.includes('tw') || 
+            if (fileName.includes('big5') || fileName.includes('tw') ||
                 fileName.includes('hk') || fileName.includes('traditional')) {
                 return 'Big5';
             }
-            
+
             // 默认返回GBK（大多数中文TXT文件使用GBK编码）
             return 'GBK';
         }
@@ -976,7 +1005,7 @@
         function convertEncoding(buffer, fromEncoding) {
             try {
                 const uint8Array = new Uint8Array(buffer);
-                
+
                 // 创建TextDecoder
                 let decoder;
                 if (fromEncoding === 'GBK') {
@@ -998,18 +1027,18 @@
                     // 默认使用UTF-8
                     decoder = new TextDecoder('utf-8');
                 }
-                
+
                 return decoder.decode(uint8Array);
             } catch (error) {
                 console.error('编码转换失败:', error);
                 encodingStatus.textContent = `编码转换失败: ${error.message}`;
                 encodingStatus.style.color = '#f56565';
-                
+
                 // 尝试使用纯JavaScript的编码转换（简单的GBK到UTF-8映射）
                 if (fromEncoding === 'GBK') {
                     return trySimpleGBKConversion(buffer);
                 }
-                
+
                 return '编码转换失败，请尝试其他编码格式';
             }
         }
@@ -1018,13 +1047,13 @@
         function trySimpleGBKConversion(buffer) {
             const uint8Array = new Uint8Array(buffer);
             let result = '';
-            
+
             // 常见GBK字符映射（这里只包含一部分，实际使用中需要完整的映射表）
             const gbkToUnicode = {
-                '0xA1A1': '　', '0xA1A2': '、', '0xA1A3': '。', '0xA1A4': '·',
+                '0xA1A1': ' ', '0xA1A2': '、', '0xA1A3': '。', '0xA1A4': '·',
                 // 更多映射可以在这里添加
             };
-            
+
             // 简单转换：将每个字节转换为字符
             for (let i = 0; i < uint8Array.length; i++) {
                 const byte = uint8Array[i];
@@ -1032,7 +1061,7 @@
                 if (byte > 127 && i + 1 < uint8Array.length) {
                     const nextByte = uint8Array[i + 1];
                     const gbkCode = '0x' + byte.toString(16).toUpperCase() + nextByte.toString(16).toUpperCase();
-                    
+
                     if (gbkToUnicode[gbkCode]) {
                         result += gbkToUnicode[gbkCode];
                     } else {
@@ -1048,7 +1077,7 @@
                     result += String.fromCharCode(byte);
                 }
             }
-            
+
             return result;
         }
 
@@ -1066,7 +1095,7 @@
         // 重新加载文件使用新编码
         reloadBtn.addEventListener('click', () => {
             if (!currentFile) return;
-            
+
             // 获取选中的编码
             let selectedEncoding = 'auto';
             encodingRadios.forEach(radio => {
@@ -1074,32 +1103,38 @@
                     selectedEncoding = radio.value === 'auto' ? 'auto' : radio.value.toUpperCase();
                 }
             });
-            
+
             encodingStatus.textContent = `正在使用 ${selectedEncoding} 编码重新加载...`;
             encodingStatus.style.color = '#4299e1';
-            
+
             // 重新读取文件
             readFile(currentFile, selectedEncoding);
         });
 
-        // 处理文本内容，分割成句子和章节
+        // 处理文本内容,分割成句子和章节
         function processTextContent(text) {
-            // 改进的句子分割逻辑，避免间隙问题
-            // 使用前瞻断言，保留标点符号在句子末尾
-            sentences = text.split(/(?<=[。！？；.!?;])\s*/);
-            
-            // 过滤空句子和只包含空格的句子
-            sentences = sentences.filter(s => s.trim().length > 0);
-            
-            // 如果句子太少，按换行符分割
+            // 统一使用段落分割方式,与displayTextContent保持一致
+            // 这样可以确保句子索引和段落显示完全对应
+            const paragraphs = text.split(/\n\s*\n/);
+
+            // 过滤空段落
+            sentences = paragraphs.filter(s => s.trim().length > 0);
+
+            // 如果只有一个段落或没有段落,按换行符分割
             if (sentences.length <= 1) {
                 sentences = text.split(/\n+/).filter(s => s.trim().length > 0);
             }
-            
+
+            // 如果还是太少,尝试按标点符号分割
+            if (sentences.length <= 1) {
+                sentences = text.split(/(?<=[。！？；.!?;])\s*/);
+                sentences = sentences.filter(s => s.trim().length > 0);
+            }
+
             // 检测章节
             detectChapters(text);
-            
-            console.log(`文本已分割为 ${sentences.length} 个句子`);
+
+            console.log(`文本已分割为 ${sentences.length} 个段落/句子`);
         }
 
         // 检测章节
@@ -1107,19 +1142,19 @@
             const chapterRegex = /^第[一二三四五六七八九十零〇百千万\d\s]{1,10}[章节卷集部篇回].+$/gm;
             const chapters = [];
             let match;
-            
+
             while ((match = chapterRegex.exec(text)) !== null) {
                 const chapterTitle = match[0].trim();
                 const startIndex = match.index;
                 const endIndex = chapterRegex.lastIndex;
-                
+
                 chapters.push({
                     title: chapterTitle,
                     startIndex: startIndex,
                     endIndex: endIndex
                 });
             }
-            
+
             // 显示章节列表
             displayChapterList(chapters);
         }
@@ -1127,19 +1162,19 @@
         // 显示章节列表
         function displayChapterList(chapters) {
             chapterList.innerHTML = '';
-            
+
             if (chapters.length === 0) {
                 chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-bookmark"></i><p>未检测到章节</p></div>';
                 return;
             }
-            
+
             chapters.forEach((chapter, index) => {
                 const chapterItem = document.createElement('div');
                 chapterItem.className = 'chapter-item';
                 chapterItem.innerHTML = `
                     <div class="chapter-title">${chapter.title}</div>
                 `;
-                
+
                 chapterItem.addEventListener('click', () => {
                     // 跳转到章节位置
                     scrollToChapter(chapter.startIndex);
@@ -1147,34 +1182,69 @@
                     document.querySelectorAll('.chapter-item').forEach(item => item.classList.remove('active'));
                     chapterItem.classList.add('active');
                 });
-                
+
                 chapterList.appendChild(chapterItem);
             });
         }
 
         // 跳转到章节位置
         function scrollToChapter(startIndex) {
+            // 记录是否正在朗读
+            const wasPlaying = isPlaying;
+
+            // 如果正在朗读,先停止
+            if (isPlaying) {
+                speechSynthesis.cancel();
+                isPlaying = false;
+                playBtn.disabled = false;
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                posIndicator.classList.remove('show');
+                clearHighlights();
+            }
+
             // 找到包含该位置的段落
             const paragraphs = textDisplay.querySelectorAll('p');
             let targetParagraph = null;
-            
+            let targetSentenceIndex = 0;
+
             for (let i = 0; i < paragraphs.length; i++) {
                 const paragraph = paragraphs[i];
                 const paragraphText = paragraph.textContent;
-                
+
                 // 检查章节标题是否在该段落中
-                if (currentFileContent.indexOf(paragraphText) <= startIndex && 
+                if (currentFileContent.indexOf(paragraphText) <= startIndex &&
                     currentFileContent.indexOf(paragraphText) + paragraphText.length > startIndex) {
                     targetParagraph = paragraph;
+
+                    // 找到对应的句子索引
+                    targetSentenceIndex = findSentenceIndexFromParagraph(paragraph);
                     break;
                 }
             }
-            
+
             if (targetParagraph) {
+                // 更新当前句子索引
+                currentSentenceIndex = targetSentenceIndex;
+                // 标记用户手动选择了位置
+                userSelectedPosition = true;
+
+                // 移除之前的选中状态
+                document.querySelectorAll('.text-display p').forEach(p => p.classList.remove('selected'));
+                // 添加选中状态
+                targetParagraph.classList.add('selected');
+
                 targetParagraph.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
                 });
+
+                // 如果之前正在朗读,自动继续朗读
+                if (wasPlaying) {
+                    setTimeout(() => {
+                        startReading(true);
+                    }, 300); // 短暂延迟确保滚动完成
+                }
             }
         }
 
@@ -1182,24 +1252,111 @@
         function displayTextContent(text) {
             // 清空现有内容
             textDisplay.innerHTML = '';
-            
+
             // 将文本按段落分割并显示
             const paragraphs = text.split(/\n\s*\n/);
-            
+
             if (paragraphs.length === 0 || (paragraphs.length === 1 && paragraphs[0] === '')) {
                 // 如果没有段落，直接显示整个文本
                 const p = document.createElement('p');
                 p.textContent = text;
+                addParagraphClickListener(p);
                 textDisplay.appendChild(p);
             } else {
                 paragraphs.forEach(paragraph => {
                     if (paragraph.trim()) {
                         const p = document.createElement('p');
                         p.textContent = paragraph;
+                        addParagraphClickListener(p);
                         textDisplay.appendChild(p);
                     }
                 });
             }
+        }
+
+        // 为段落添加点击监听器
+        function addParagraphClickListener(paragraph) {
+            paragraph.addEventListener('click', function () {
+                // 记录是否正在朗读
+                const wasPlaying = isPlaying;
+
+                // 如果正在朗读,先停止
+                if (isPlaying) {
+                    speechSynthesis.cancel();
+                    isPlaying = false;
+                    playBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                    stopBtn.disabled = true;
+                    posIndicator.classList.remove('show');
+                    clearHighlights();
+                }
+
+                // 移除所有段落的选中状态
+                document.querySelectorAll('.text-display p').forEach(p => p.classList.remove('selected'));
+                // 添加当前段落的选中状态
+                this.classList.add('selected');
+
+                // 找到对应的句子索引
+                const sentenceIndex = findSentenceIndexFromParagraph(this);
+                currentSentenceIndex = sentenceIndex;
+                // 标记用户手动选择了位置
+                userSelectedPosition = true;
+
+                // 显示提示信息
+                showSelectionMessage(sentenceIndex);
+
+                // 如果之前正在朗读,自动继续朗读
+                if (wasPlaying) {
+                    setTimeout(() => {
+                        startReading(true);
+                    }, 300); // 短暂延迟确保UI更新完成
+                }
+            });
+        }
+
+        // 从段落查找句子索引
+        function findSentenceIndexFromParagraph(paragraph) {
+            const paragraphText = paragraph.textContent.trim();
+
+            // 由于现在句子和段落使用相同的分割方式,直接精确匹配即可
+            for (let i = 0; i < sentences.length; i++) {
+                // 精确匹配或包含匹配
+                if (sentences[i].trim() === paragraphText ||
+                    sentences[i].includes(paragraphText) ||
+                    paragraphText.includes(sentences[i].trim())) {
+                    return i;
+                }
+            }
+
+            // 如果找不到精确匹配,返回0
+            console.warn('未找到匹配的句子索引,使用默认值0');
+            return 0;
+        }
+
+        // 显示选择提示消息
+        function showSelectionMessage(sentenceIndex) {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #4299e1;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease-out;
+            `;
+            message.innerHTML = `<i class="fas fa-check-circle"></i> 已选择起始位置: 第 ${sentenceIndex + 1} 句`;
+            document.body.appendChild(message);
+
+            // 2秒后自动消失
+            setTimeout(() => {
+                message.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => message.remove(), 300);
+            }, 2000);
         }
 
         // 开始朗读
@@ -1208,22 +1365,26 @@
             if (currentSentenceIndex >= sentences.length) {
                 currentSentenceIndex = 0;
             }
-            
+
             // 如果没有在播放且没有跳过位置检测，则从当前可见位置开始
-            if (!isPlaying && !skipPositionDetection) {
+            // 但如果用户手动选择了位置，则不要覆盖
+            if (!isPlaying && !skipPositionDetection && !userSelectedPosition) {
                 currentSentenceIndex = getCurrentVisibleSentenceIndex();
             }
-            
+
+            // 开始朗读后，清除用户选择标志
+            userSelectedPosition = false;
+
             // 更新UI状态
             isPlaying = true;
             playBtn.disabled = true;
             pauseBtn.disabled = false;
             stopBtn.disabled = false;
-            
+
             // 显示当前位置指示器
             posIndicator.classList.add('show');
             updatePositionIndicator();
-            
+
             // 开始连续朗读流程
             startContinuousReading();
         }
@@ -1234,19 +1395,19 @@
                 stopReading();
                 return;
             }
-            
+
             // 设置语音参数
             utterance = new SpeechSynthesisUtterance(sentences[currentSentenceIndex]);
             utterance.rate = parseFloat(speedSelect.value);
-            
+
             // 选择语音 - 确保使用用户选择的语音
             const selectedVoice = voices.find(voice => voice.voiceURI === voiceSelect.value);
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             } else {
                 // 如果找不到用户选择的语音，使用默认语音
-                const xiaoxiaoVoice = voices.find(voice => 
-                    voice.name.includes('Microsoft Xiaoxiao Online') || 
+                const xiaoxiaoVoice = voices.find(voice =>
+                    voice.name.includes('Microsoft Xiaoxiao Online') ||
                     voice.name.includes('Xiaoxiao') ||
                     voice.voiceURI.includes('Microsoft Xiaoxiao Online')
                 );
@@ -1256,28 +1417,28 @@
                     utterance.voice = voices[0];
                 }
             }
-            
+
             // 更新位置指示器（每次开始新句子时更新）
             updatePositionIndicator();
-            
+
             // 高亮当前朗读的句子
             highlightCurrentSentence();
-            
+
             // 语音合成事件处理
-            utterance.onboundary = function(event) {
+            utterance.onboundary = function (event) {
                 // 在句子边界处预加载下一句，减少停顿
                 if (event.name === 'sentence' && currentSentenceIndex + 1 < sentences.length) {
-                    preloadNextSentence();
+                    //preloadNextSentence();
                 }
             };
-            
-            utterance.onend = function() {
+
+            utterance.onend = function () {
                 // 清除当前高亮
                 clearHighlights();
-                
+
                 // 移动到下一句
                 currentSentenceIndex++;
-                
+
                 if (currentSentenceIndex < sentences.length) {
                     // 延迟很短的时间后立即开始下一句，减少停顿
                     setTimeout(() => {
@@ -1293,13 +1454,22 @@
                     posIndicator.classList.remove('show');
                 }
             };
-            
-            utterance.onerror = function(event) {
+
+            utterance.onerror = function (event) {
                 console.error('语音合成错误:', event);
-                // 取消错误弹窗，静默处理错误
-                stopReading();
+                // 静默处理错误,但不重置currentSentenceIndex
+                // 这样在朗读过程中切换位置时,不会丢失用户选择的位置
+                speechSynthesis.cancel();
+                isPlaying = false;
+                playBtn.disabled = false;
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                posIndicator.classList.remove('show');
+                clearHighlights();
+                stopAutoScroll();
+                // 注意:不重置currentSentenceIndex,保留用户选择的位置
             };
-            
+
             // 开始语音合成
             speechSynthesis.speak(utterance);
         }
@@ -1307,15 +1477,15 @@
         // 预加载下一句，减少句子间停顿
         function preloadNextSentence() {
             if (currentSentenceIndex + 1 >= sentences.length) return;
-            
+
             const nextUtterance = new SpeechSynthesisUtterance(sentences[currentSentenceIndex + 1]);
             nextUtterance.rate = parseFloat(speedSelect.value);
-            
+
             const selectedVoice = voices.find(voice => voice.voiceURI === voiceSelect.value);
             if (selectedVoice) {
                 nextUtterance.voice = selectedVoice;
             }
-            
+
             // 只是预加载，不播放
             speechSynthesis.cancel(); // 先取消当前播放
             speechSynthesis.speak(nextUtterance);
@@ -1330,25 +1500,25 @@
                 // 从选择的文本位置开始
                 return getSentenceIndexFromSelection(selection);
             }
-            
+
             // 从当前屏幕中央位置开始
             const visibleTop = textDisplay.scrollTop;
             const visibleCenter = visibleTop + textDisplay.clientHeight / 2;
-            
+
             // 找到当前屏幕中央位置对应的句子
             const paragraphs = textDisplay.querySelectorAll('p');
             let currentCharIndex = 0;
-            
+
             for (let i = 0; i < paragraphs.length; i++) {
                 const paragraph = paragraphs[i];
                 const paragraphTop = paragraph.offsetTop;
                 const paragraphHeight = paragraph.offsetHeight;
-                
+
                 // 检查段落是否在屏幕中央附近
                 if (paragraphTop <= visibleCenter && paragraphTop + paragraphHeight >= visibleCenter) {
                     // 找到段落中的中央位置
                     const paragraphText = paragraph.textContent;
-                    
+
                     // 在句子数组中查找包含该段落的句子
                     for (let j = 0; j < sentences.length; j++) {
                         if (paragraphText.includes(sentences[j])) {
@@ -1357,7 +1527,7 @@
                     }
                 }
             }
-            
+
             // 如果找不到精确匹配，使用百分比方法作为备选
             const totalHeight = textDisplay.scrollHeight;
             const scrollPercentage = visibleCenter / totalHeight;
@@ -1371,27 +1541,27 @@
         function getSentenceIndexFromSelection(selection) {
             const selectedText = selection.toString().trim();
             if (selectedText.length === 0) return 0;
-            
+
             // 在句子数组中查找包含选择文本的句子
             for (let i = 0; i < sentences.length; i++) {
                 if (sentences[i].includes(selectedText)) {
                     return i;
                 }
             }
-            
+
             // 如果找不到精确匹配，找到最接近的句子
             const anchorNode = selection.anchorNode;
             if (anchorNode && anchorNode.parentElement) {
                 const paragraph = anchorNode.parentElement;
                 const paragraphText = paragraph.textContent;
-                
+
                 for (let i = 0; i < sentences.length; i++) {
                     if (paragraphText.includes(sentences[i])) {
                         return i;
                     }
                 }
             }
-            
+
             return 0;
         }
 
@@ -1446,7 +1616,7 @@
 
             // 保存到localStorage
             localStorage.setItem('readingProgress', JSON.stringify(saveData));
-            
+
             // 显示保存成功提示
             const saveMessage = document.createElement('div');
             saveMessage.style.cssText = `
@@ -1482,7 +1652,7 @@
 
             try {
                 const saveData = JSON.parse(savedData);
-                
+
                 // 验证存档数据
                 if (!saveData.sentenceIndex || !saveData.totalSentences) {
                     alert('存档数据无效');
@@ -1497,7 +1667,7 @@
 
                 // 设置当前句子索引
                 currentSentenceIndex = saveData.sentenceIndex;
-                
+
                 // 确保索引在有效范围内
                 if (currentSentenceIndex < 0) currentSentenceIndex = 0;
                 if (currentSentenceIndex >= sentences.length) currentSentenceIndex = sentences.length - 1;
@@ -1544,7 +1714,7 @@
         // 滚动到指定句子
         function scrollToSentence(sentenceText) {
             const paragraphs = textDisplay.querySelectorAll('p');
-            
+
             for (let i = 0; i < paragraphs.length; i++) {
                 const paragraph = paragraphs[i];
                 if (paragraph.textContent.includes(sentenceText)) {
@@ -1560,46 +1730,46 @@
         // 高亮当前朗读的句子
         function highlightCurrentSentence() {
             clearHighlights();
-            
+
             // 获取当前句子
             const currentSentence = sentences[currentSentenceIndex];
             if (!currentSentence) return;
-            
+
             // 在文本显示区域查找并高亮当前句子
             const paragraphs = textDisplay.querySelectorAll('p');
-            
+
             for (let i = 0; i < paragraphs.length; i++) {
                 const paragraph = paragraphs[i];
                 const paragraphText = paragraph.textContent;
                 const sentenceIndex = paragraphText.indexOf(currentSentence);
-                
+
                 if (sentenceIndex !== -1) {
                     // 创建范围并高亮
                     const textNodes = getTextNodes(paragraph);
                     let currentIndex = 0;
-                    
+
                     for (let j = 0; j < textNodes.length; j++) {
                         const textNode = textNodes[j];
                         const nodeLength = textNode.textContent.length;
-                        
+
                         if (currentIndex <= sentenceIndex && currentIndex + nodeLength > sentenceIndex) {
                             const startOffset = sentenceIndex - currentIndex;
                             const endOffset = Math.min(startOffset + currentSentence.length, nodeLength);
-                            
+
                             const range = document.createRange();
                             range.setStart(textNode, startOffset);
                             range.setEnd(textNode, endOffset);
-                            
+
                             const highlightSpan = document.createElement('span');
                             highlightSpan.className = 'highlight';
-                            
+
                             range.surroundContents(highlightSpan);
                             break;
                         }
-                        
+
                         currentIndex += nodeLength;
                     }
-                    
+
                     // 滚动到高亮区域
                     const highlightElement = paragraph.querySelector('.highlight');
                     if (highlightElement) {
@@ -1608,7 +1778,7 @@
                             block: 'center'
                         });
                     }
-                    
+
                     break;
                 }
             }
@@ -1623,12 +1793,12 @@
                 null,
                 false
             );
-            
+
             let node;
             while (node = walker.nextNode()) {
                 textNodes.push(node);
             }
-            
+
             return textNodes;
         }
 
@@ -1650,7 +1820,7 @@
         // 开始自动滚动
         function startAutoScroll() {
             stopAutoScroll();
-            
+
             // 每100毫秒滚动一点点，实现平滑滚动
             autoScrollInterval = setInterval(() => {
                 // 轻微向下滚动
@@ -1679,26 +1849,29 @@
         stopBtn.addEventListener('click', stopReading);
 
         speedSelect.addEventListener('change', () => {
-            if (utterance && speechSynthesis.speaking) {
+            // 检查是否正在朗读
+            if (isPlaying) {
                 speechSynthesis.cancel();
-                utterance.rate = parseFloat(speedSelect.value);
-                startReading();
+                isPlaying = false;
+                // 使用skipPositionDetection=true保留当前位置
+                setTimeout(() => {
+                    startReading(true);
+                }, 100); // 短暂延迟确保cancel完成
             }
         });
 
         voiceSelect.addEventListener('change', () => {
             // 保存当前选择的语音到本地存储，防止重置
             localStorage.setItem('selectedVoice', voiceSelect.value);
-            
-            if (utterance && speechSynthesis.speaking) {
+
+            // 检查是否正在朗读
+            if (isPlaying) {
                 speechSynthesis.cancel();
-                
-                const selectedVoice = voices.find(voice => voice.voiceURI === voiceSelect.value);
-                if (selectedVoice) {
-                    utterance.voice = selectedVoice;
-                }
-                
-                startReading();
+                isPlaying = false;
+                // 使用skipPositionDetection=true保留当前位置
+                setTimeout(() => {
+                    startReading(true);
+                }, 100); // 短暂延迟确保cancel完成
             }
         });
 
@@ -1719,7 +1892,7 @@
 
         // 初始化
         loadVoices();
-        
+
         // 示例文本（如果用户没有上传文件，可以提供一个示例）
         const sampleText = `欢迎使用TXT在线阅读器！
 
@@ -1757,4 +1930,5 @@ CNB：https://cnb.cool/IIIStudio/HTML/MSTTS
         displayTextContent(sampleText);
     </script>
 </body>
+
 </html>
