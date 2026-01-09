@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 
@@ -631,10 +632,7 @@
                             <i class="fas fa-play"></i>
                             <span>开始朗读</span>
                         </button>
-                        <button id="pauseBtn" class="control-btn" disabled>
-                            <i class="fas fa-pause"></i>
-                            <span>暂停</span>
-                        </button>
+
                         <button id="stopBtn" class="control-btn" disabled>
                             <i class="fas fa-stop"></i>
                             <span>停止</span>
@@ -738,7 +736,6 @@
         const fileInfo = document.getElementById('fileInfo');
         const textDisplay = document.getElementById('textDisplay');
         const playBtn = document.getElementById('playBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
         const saveBtn = document.getElementById('saveBtn');
         const loadBtn = document.getElementById('loadBtn');
@@ -915,7 +912,6 @@
 
                 // 启用播放按钮和重新加载按钮
                 playBtn.disabled = false;
-                pauseBtn.disabled = true;
                 stopBtn.disabled = true;
                 reloadBtn.disabled = false;
                 saveBtn.disabled = false;
@@ -1198,7 +1194,6 @@
                 speechSynthesis.cancel();
                 isPlaying = false;
                 playBtn.disabled = false;
-                pauseBtn.disabled = true;
                 stopBtn.disabled = true;
                 posIndicator.classList.remove('show');
                 clearHighlights();
@@ -1286,7 +1281,6 @@
                     speechSynthesis.cancel();
                     isPlaying = false;
                     playBtn.disabled = false;
-                    pauseBtn.disabled = true;
                     stopBtn.disabled = true;
                     posIndicator.classList.remove('show');
                     clearHighlights();
@@ -1379,7 +1373,6 @@
             // 更新UI状态
             isPlaying = true;
             playBtn.disabled = true;
-            pauseBtn.disabled = false;
             stopBtn.disabled = false;
 
             // 显示当前位置指示器
@@ -1450,7 +1443,6 @@
                     currentSentenceIndex = 0;
                     isPlaying = false;
                     playBtn.disabled = false;
-                    pauseBtn.disabled = true;
                     stopBtn.disabled = true;
                     posIndicator.classList.remove('show');
                 }
@@ -1463,7 +1455,6 @@
                 speechSynthesis.cancel();
                 isPlaying = false;
                 playBtn.disabled = false;
-                pauseBtn.disabled = true;
                 stopBtn.disabled = true;
                 posIndicator.classList.remove('show');
                 clearHighlights();
@@ -1566,35 +1557,12 @@
             return 0;
         }
 
-        // 暂停朗读
-        function pauseReading() {
-            if (speechSynthesis.speaking && !speechSynthesis.paused) {
-                speechSynthesis.pause();
-                isPlaying = false;
-                pauseBtn.disabled = true;
-                playBtn.disabled = false;
-                stopAutoScroll();
-            }
-        }
-
-        // 恢复朗读
-        function resumeReading() {
-            if (speechSynthesis.speaking && speechSynthesis.paused) {
-                speechSynthesis.resume();
-                isPlaying = true;
-                pauseBtn.disabled = false;
-                playBtn.disabled = true;
-                startAutoScroll();
-            }
-        }
-
         // 停止朗读
         function stopReading() {
             speechSynthesis.cancel();
             isPlaying = false;
             currentSentenceIndex = 0;
             playBtn.disabled = false;
-            pauseBtn.disabled = true;
             stopBtn.disabled = true;
             posIndicator.classList.remove('show');
             clearHighlights();
@@ -1875,15 +1843,7 @@
         }
 
         // 事件监听
-        playBtn.addEventListener('click', () => {
-            if (isPlaying && speechSynthesis.paused) {
-                resumeReading();
-            } else {
-                startReading();
-            }
-        });
-
-        pauseBtn.addEventListener('click', pauseReading);
+        playBtn.addEventListener('click', startReading);
         stopBtn.addEventListener('click', stopReading);
 
         speedSelect.addEventListener('change', () => {
