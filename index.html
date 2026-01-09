@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TXT在线文字转语音阅读器</title>
+    <title>TXT在线听书文字转语音阅读器</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -275,6 +275,8 @@
             gap: 15px;
             padding-bottom: 20px;
             border-bottom: 1px solid #eaeef2;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .playback-controls {
@@ -288,14 +290,14 @@
             color: white;
             border: none;
             border-radius: 50px;
-            padding: 12px 24px;
-            font-size: 1rem;
+            padding: 8px 16px;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 6px;
             transition: all 0.3s;
             box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
         }
@@ -313,7 +315,25 @@
         }
 
         .control-btn i {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
+        }
+
+        .control-btn span {
+            font-size: 0.85rem;
+        }
+
+        .save-load-btn {
+            background-color: #48bb78;
+            box-shadow: 0 4px 6px rgba(72, 187, 120, 0.3);
+        }
+
+        .save-load-btn:hover {
+            background-color: #38a169;
+        }
+
+        .save-load-btn:disabled {
+            background-color: #a0aec0;
+            box-shadow: none;
         }
 
         .speed-control {
@@ -323,6 +343,7 @@
             background-color: #f8fafc;
             padding: 8px 15px;
             border-radius: 50px;
+            flex-shrink: 0;
         }
 
         .speed-control label {
@@ -338,6 +359,7 @@
             background-color: white;
             color: #4a5568;
             font-weight: 500;
+            min-width: 80px;
         }
 
         .text-display {
@@ -351,10 +373,6 @@
             color: #2d3748;
             box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
             border: 1px solid #e2e8f0;
-        }
-
-        .text-display p {
-            margin-bottom: 1.2rem;
         }
 
         .highlight {
@@ -450,6 +468,7 @@
             background-color: #f8fafc;
             padding: 8px 15px;
             border-radius: 50px;
+            flex-shrink: 0;
         }
 
         .voice-selector select {
@@ -459,7 +478,16 @@
             background-color: white;
             color: #4a5568;
             font-weight: 500;
-            min-width: 150px;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 100%;
         }
 
         .encoding-status {
@@ -467,6 +495,28 @@
             color: #718096;
             margin-top: 8px;
             font-style: italic;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -564,23 +614,35 @@
                             <i class="fas fa-stop"></i>
                             <span>停止</span>
                         </button>
+                        <button id="saveBtn" class="control-btn save-load-btn" disabled>
+                            <i class="fas fa-save"></i>
+                            <span>存档</span>
+                        </button>
+                        <button id="loadBtn" class="control-btn save-load-btn" disabled>
+                            <i class="fas fa-upload"></i>
+                            <span>读档</span>
+                        </button>
                     </div>
                     
-                    <div class="speed-control">
-                        <label for="speedSelect">语速:</label>
-                        <select id="speedSelect">
-                            <option value="0.5">0.5x</option>
-                            <option value="0.8">0.8x</option>
-                            <option value="1" selected>正常</option>
-                            <option value="1.2">1.2x</option>
-                            <option value="1.5">1.5x</option>
-                            <option value="2">2x</option>
-                        </select>
-                    </div>
-                    
-                    <div class="voice-selector">
-                        <label for="voiceSelect">语音:</label>
-                        <select id="voiceSelect"></select>
+                    <div class="settings-row">
+                        <div class="voice-selector">
+                            <label for="voiceSelect">语音:</label>
+                            <select id="voiceSelect"></select>
+                        </div>
+                        
+                        <div class="speed-control">
+                            <label for="speedSelect">语速:</label>
+                            <select id="speedSelect">
+                                <option value="0.5">0.5x</option>
+                                <option value="0.8">0.8x</option>
+                                <option value="1" selected>正常</option>
+                                <option value="1.2">1.2x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2x</option>
+                                <option value="2.5">2.5x</option>
+                                <option value="3">3x</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -618,6 +680,11 @@
 
         <div class="footer-info">
             <p>本阅读器支持多种编码格式，解决中文TXT文件乱码问题 | 使用浏览器Web Speech API实现文字转语音功能</p>
+            <p>
+                <a href="http://github.com/IIIStudio/MSTTS" target="_blank" style="color: #718096; text-decoration: none;">GitHub</a> | 
+                <a href="https://cnb.cool/IIIStudio/HTML/MSTTS" target="_blank" style="color: #718096; text-decoration: none;">CNB</a> | 
+                <a href="https://iiistudio.github.io/MSTTS/" target="_blank" style="color: #718096; text-decoration: none;">MSTTS</a>
+            </p>
         </div>
     </div>
 
@@ -643,6 +710,8 @@
         const playBtn = document.getElementById('playBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const loadBtn = document.getElementById('loadBtn');
         const speedSelect = document.getElementById('speedSelect');
         const voiceSelect = document.getElementById('voiceSelect');
         const posIndicator = document.getElementById('posIndicator');
@@ -819,6 +888,8 @@
                 pauseBtn.disabled = true;
                 stopBtn.disabled = true;
                 reloadBtn.disabled = false;
+                saveBtn.disabled = false;
+                loadBtn.disabled = false;
                 
                 // 显示文本内容
                 displayTextContent(currentFileContent);
@@ -1033,7 +1104,7 @@
 
         // 检测章节
         function detectChapters(text) {
-            const chapterRegex = /^第.{1,5}章.+$/gm;
+            const chapterRegex = /^第[一二三四五六七八九十零〇百千万\d\s]{1,10}[章节卷集部篇回].+$/gm;
             const chapters = [];
             let match;
             
@@ -1132,14 +1203,14 @@
         }
 
         // 开始朗读
-        function startReading() {
+        function startReading(skipPositionDetection = false) {
             // 从当前滚动位置开始，而不是从头开始
             if (currentSentenceIndex >= sentences.length) {
                 currentSentenceIndex = 0;
             }
             
-            // 如果没有在播放，则从当前可见位置开始
-            if (!isPlaying) {
+            // 如果没有在播放且没有跳过位置检测，则从当前可见位置开始
+            if (!isPlaying && !skipPositionDetection) {
                 currentSentenceIndex = getCurrentVisibleSentenceIndex();
             }
             
@@ -1185,6 +1256,9 @@
                     utterance.voice = voices[0];
                 }
             }
+            
+            // 更新位置指示器（每次开始新句子时更新）
+            updatePositionIndicator();
             
             // 高亮当前朗读的句子
             highlightCurrentSentence();
@@ -1356,6 +1430,133 @@
             stopAutoScroll();
         }
 
+        // 存档功能
+        function saveProgress() {
+            if (!currentFileContent || sentences.length === 0) {
+                alert('请先加载文本文件');
+                return;
+            }
+
+            const saveData = {
+                fileName: currentFileName.textContent,
+                sentenceIndex: currentSentenceIndex,
+                totalSentences: sentences.length,
+                saveTime: new Date().toISOString()
+            };
+
+            // 保存到localStorage
+            localStorage.setItem('readingProgress', JSON.stringify(saveData));
+            
+            // 显示保存成功提示
+            const saveMessage = document.createElement('div');
+            saveMessage.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #48bb78;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease-out;
+            `;
+            saveMessage.innerHTML = `<i class="fas fa-check-circle"></i> 存档成功：第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+            document.body.appendChild(saveMessage);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                saveMessage.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => saveMessage.remove(), 300);
+            }, 3000);
+        }
+
+        // 读档功能
+        function loadProgress() {
+            const savedData = localStorage.getItem('readingProgress');
+            if (!savedData) {
+                alert('没有找到存档记录');
+                return;
+            }
+
+            try {
+                const saveData = JSON.parse(savedData);
+                
+                // 验证存档数据
+                if (!saveData.sentenceIndex || !saveData.totalSentences) {
+                    alert('存档数据无效');
+                    return;
+                }
+
+                // 检查是否是同一个文件
+                if (saveData.fileName !== currentFileName.textContent) {
+                    const confirmLoad = confirm(`存档文件是：${saveData.fileName}\n当前文件是：${currentFileName.textContent}\n\n确定要读取这个存档吗？`);
+                    if (!confirmLoad) return;
+                }
+
+                // 设置当前句子索引
+                currentSentenceIndex = saveData.sentenceIndex;
+                
+                // 确保索引在有效范围内
+                if (currentSentenceIndex < 0) currentSentenceIndex = 0;
+                if (currentSentenceIndex >= sentences.length) currentSentenceIndex = sentences.length - 1;
+
+                // 滚动到对应的句子位置
+                if (sentences[currentSentenceIndex]) {
+                    const targetSentence = sentences[currentSentenceIndex];
+                    scrollToSentence(targetSentence);
+                }
+
+                // 显示加载成功提示
+                const loadMessage = document.createElement('div');
+                loadMessage.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background-color: #4299e1;
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 1000;
+                    font-weight: 600;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                loadMessage.innerHTML = `<i class="fas fa-check-circle"></i> 读档成功：第 ${currentSentenceIndex + 1} 句 / 共 ${sentences.length} 句`;
+                document.body.appendChild(loadMessage);
+
+                // 3秒后自动消失
+                setTimeout(() => {
+                    loadMessage.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => loadMessage.remove(), 300);
+                }, 3000);
+
+                // 立即从存档位置开始播放（跳过位置检测，使用已设置的currentSentenceIndex）
+                startReading(true);
+
+            } catch (error) {
+                console.error('读取存档失败:', error);
+                alert('读取存档失败，存档数据可能已损坏');
+            }
+        }
+
+        // 滚动到指定句子
+        function scrollToSentence(sentenceText) {
+            const paragraphs = textDisplay.querySelectorAll('p');
+            
+            for (let i = 0; i < paragraphs.length; i++) {
+                const paragraph = paragraphs[i];
+                if (paragraph.textContent.includes(sentenceText)) {
+                    paragraph.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                    break;
+                }
+            }
+        }
+
         // 高亮当前朗读的句子
         function highlightCurrentSentence() {
             clearHighlights();
@@ -1501,6 +1702,12 @@
             }
         });
 
+        // 存档按钮事件
+        saveBtn.addEventListener('click', saveProgress);
+
+        // 读档按钮事件
+        loadBtn.addEventListener('click', loadProgress);
+
         // 页面卸载前停止语音
         window.addEventListener('beforeunload', () => {
             if (speechSynthesis.speaking) {
@@ -1518,23 +1725,31 @@
 
 这是一个示例文本，您可以点击左侧的"导入TXT文件"区域上传您自己的文本文件。
 
+GitHub：http://github.com/IIIStudio/MSTTS
+
+CNB：https://cnb.cool/IIIStudio/HTML/MSTTS
+
+测试网站：https://iiistudio.github.io/MSTTS/
+
 功能特点：
+
 1. 智能编码检测，解决中文乱码问题
+
 2. 支持导入本地TXT文件
+
 3. 文字转语音朗读功能
+
 4. 自动滚动和高亮当前朗读内容
+
 5. 可调节朗读速度和选择不同语音
 
 常见中文编码问题解决方案：
-• 如果文本显示为"�����������蹫˾������"等乱码，请尝试选择"GBK"编码
-• 如果文本显示为繁体中文乱码，请尝试选择"Big5"编码
-• 现代文本文件通常使用"UTF-8"编码
-• 如果还是出现问题自己转码
-• AI生成的有点拉但是能用。
 
-GitHub：http://github.com/IIIStudio/MSTTS
-CNB：https://cnb.cool/IIIStudio/HTML/MSTTS
-测试网站：https://iiistudio.github.io/MSTTS/
+• 如果文本显示为"�����������蹫˾������"等乱码，请尝试选择"GBK"编码
+
+• 如果文本显示为繁体中文乱码，请尝试选择"Big5"编码
+
+• 现代文本文件通常使用"UTF-8"编码
 
 请上传您的文本文件开始体验吧！`;
 
