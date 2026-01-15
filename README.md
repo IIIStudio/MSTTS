@@ -1,6 +1,12 @@
 # MSTTS TXT在线听书文字转语音阅读器
 演示：https://www.bilibili.com/video/BV1WZrPBsEjw/
 
+> 推荐使用Edge游览器使用。
+
+## 个人说明
+1. 获取章节列表正则：`const chapterRegex = /^第[一二三四五六七八九十零〇百千万\d\s]{1,10}[章节卷集部篇回].+$/gm;`
+2. **TXT内容分割是以章节与换行做分割**
+3. 推荐使用EmEditor软件制作宏来编辑TXT
 ## 功能特点
 
 - **智能编码检测** - 自动检测文件编码格式，解决中文TXT文件乱码问题
